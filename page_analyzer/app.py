@@ -40,14 +40,22 @@ def add_url():
 @app.route('/urls/<int:id>')
 def show_url(id):
     url = db.find_url(id)
+    checks = db.show_checks(id)
     messages = get_flashed_messages(with_categories=True)
-    return render_template('show_url.html', url=url, messages=messages)
+    return render_template('show_url.html', url=url, checks=checks, messages=messages)
 
 
 @app.get('/urls')
 def show_urls():
     urls = db.list_urls()
     return render_template('list_urls.html', urls=urls)
+
+
+@app.post('/urls/<int:id>/checks')
+def initialize_check(id):
+    db.add_check(id)
+    return redirect(url_for('show_url', id=id))
+
 
 
 def normalize(url):
