@@ -4,6 +4,7 @@ import os
 from dotenv import load_dotenv
 import validators
 from urllib.parse import urlparse
+from bs4 import BeautifulSoup
 import page_analyzer.db as db
 
 
@@ -61,10 +62,21 @@ def initialize_check(id):
     except requests.exceptions.RequestException as e:
         print(e)
         flash('Произошла ошибка при проверке', 'danger')
-        return redirect(url_for('urls_show', id=id))
-
+        return redirect(url_for('show_url', id=id))
     status_code = response.status_code
-    db.add_check(url_id=id, status_code=status_code)
+
+    soup = BeautifulSoup(response.text, 'html.parser')
+    h1 = soup.find('h1').text if soup.find('h1') else ''
+    title = soup.title.text if soup.title else ''
+    description = soup.find(
+        'meta',
+        {'name': 'description'}
+    ).get('content') if soup.find(
+        'meta',
+        {'name': 'description'}
+    ) else ''
+    db.add_check(url_id=id, status_code=status_code, h1=h1, title=title, description=description)
+
     return redirect(url_for('show_url', id=id))
 
 
