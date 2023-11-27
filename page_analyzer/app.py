@@ -1,5 +1,5 @@
 from flask import Flask, render_template, request, flash, get_flashed_messages, url_for, redirect
-import psycopg2
+import requests
 import os
 from dotenv import load_dotenv
 import validators
@@ -53,7 +53,18 @@ def show_urls():
 
 @app.post('/urls/<int:id>/checks')
 def initialize_check(id):
-    db.add_check(id)
+    url = db.find_url(id)['name']
+
+    try:
+        response = requests.get(url)
+        response.raise_for_status()
+    except requests.exceptions.RequestException as e:
+        print(e)
+        flash('Произошла ошибка при проверке', 'danger')
+        return redirect(url_for('urls_show', id=id))
+
+    status_code = response.status_code
+    db.add_check(url_id=id, status_code=status_code)
     return redirect(url_for('show_url', id=id))
 
 

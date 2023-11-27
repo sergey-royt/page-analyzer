@@ -54,17 +54,25 @@ def find_url(id):
 def list_urls():
     with connect().cursor() as cursor:
         cursor.execute("""
-        SELECT 
+        SELECT DISTINCT ON (urls.id)
         urls.id,
         urls.name,
-        MAX(url_checks.created_at) AS last_check
+        MAX(url_checks.created_at) AS last_check,
+        url_checks.status_code
         FROM urls
         LEFT JOIN url_checks ON urls.id = url_checks.url_id
-        GROUP BY urls.id, urls.name
+        GROUP BY urls.id, urls.name, url_checks.status_code
         ORDER BY urls.id
         DESC""")
         raw_urls = cursor.fetchall()
-    urls = [{'id': id, 'name': name, 'last_check': last_check or ''} for id, name, last_check in raw_urls]
+    urls = [
+        {
+            'id': id,
+            'name': name,
+            'last_check': last_check or '',
+            'status_code': status_code or ''
+        } for id, name, last_check, status_code in raw_urls
+    ]
     return urls
 
 
