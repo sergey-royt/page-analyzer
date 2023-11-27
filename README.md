@@ -2,7 +2,7 @@
 [![Maintainability](https://api.codeclimate.com/v1/badges/5da3461e840fd0963c66/maintainability)](https://codeclimate.com/github/sergey-royt/python-project-83/maintainability)
 
 ## Page analyzer
-___
+
 ### Description
 This is a Python web app uses Flask framework
 which provides simple features to check websites SEO-accessibility.
