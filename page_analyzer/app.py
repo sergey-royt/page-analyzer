@@ -1,8 +1,14 @@
-from flask import Flask, render_template, request, flash, get_flashed_messages, url_for, redirect
+from flask import Flask, \
+    render_template, \
+    request, \
+    flash, \
+    get_flashed_messages, \
+    url_for, \
+    redirect
 import requests
 import os
 from dotenv import load_dotenv
-import validators
+from validators import url as validator
 from urllib.parse import urlparse
 from bs4 import BeautifulSoup
 import page_analyzer.db as db
@@ -23,9 +29,11 @@ def add_url():
     raw_url = request.form.get('url')
     url = normalize(raw_url)
 
-    if not validators.url(url):
+    if not validator(url):
         flash('Некорректный URL', 'danger')
-        return render_template('index.html', messages=get_flashed_messages(with_categories=True)), 422
+        return render_template(
+            'index.html',
+            messages=get_flashed_messages(with_categories=True)), 422
 
     id = db.is_url_in_db(url)
     if id:
@@ -43,7 +51,11 @@ def show_url(id):
     url = db.find_url(id)
     checks = db.show_checks(id)
     messages = get_flashed_messages(with_categories=True)
-    return render_template('show_url.html', url=url, checks=checks, messages=messages)
+    return render_template('show_url.html',
+                           url=url,
+                           checks=checks,
+                           messages=messages
+                           )
 
 
 @app.get('/urls')
@@ -75,13 +87,17 @@ def initialize_check(id):
         'meta',
         {'name': 'description'}
     ) else ''
-    db.add_check(url_id=id, status_code=status_code, h1=h1, title=title, description=description)
-
+    db.add_check(
+        url_id=id,
+        status_code=status_code,
+        h1=h1,
+        title=title,
+        description=description
+    )
+    flash('Страница успешно проверена', 'success')
     return redirect(url_for('show_url', id=id))
-
 
 
 def normalize(url):
     o = urlparse(url)
     return f'{o.scheme}://{o.netloc}'
-

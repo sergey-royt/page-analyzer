@@ -43,7 +43,7 @@ def add_url(url):
 def find_url(id):
     with connect().cursor() as cursor:
         cursor.execute("""
-        SELECT * 
+        SELECT *
         FROM urls
         WHERE id = %(id)s""", {'id': id})
         row = cursor.fetchone()
@@ -79,10 +79,10 @@ def list_urls():
 def show_checks(id):
     with connect().cursor() as cursor:
         cursor.execute("""
-        SELECT id, 
-        status_code, 
+        SELECT id,
+        status_code,
         COALESCE(h1, ''),
-        COALESCE(title, ''), 
+        COALESCE(title, ''),
         COALESCE(description, ''),
         created_at
         FROM url_checks
@@ -96,7 +96,12 @@ def show_checks(id):
             'title': title,
             'description': description,
             'created_at': created_at
-        } for id, status_code, h1, title, description, created_at in raw_checks]
+        } for id,
+        status_code,
+        h1,
+        title,
+        description,
+        created_at in raw_checks]
     return checks
 
 
@@ -107,7 +112,12 @@ def add_check(url_id, status_code=None, h1=None, title=None, description=None):
         cursor.execute("""
         INSERT INTO url_checks
         (url_id, status_code, h1, title, description, created_at)
-        VALUES (%(url_id)s, %(status_code)s, %(h1)s, %(title)s, %(description)s, %(created_at)s)""",
+        VALUES (%(url_id)s,
+        %(status_code)s,
+        %(h1)s,
+        %(title)s,
+        %(description)s,
+        %(created_at)s)""",
                        {
                            'url_id': url_id,
                            'status_code': status_code,
