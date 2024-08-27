@@ -1,9 +1,8 @@
 from dotenv import load_dotenv
 import psycopg2
-import os
 from datetime import date
 
-from settings import DATABASE_URL
+from .settings import DATABASE_URL
 
 
 load_dotenv()

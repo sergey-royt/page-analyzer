@@ -6,17 +6,16 @@ from flask import Flask, \
     url_for, \
     redirect
 import requests
-import os
 from dotenv import load_dotenv
 from validators import url as validator
-from urllib.parse import urlparse
-from bs4 import BeautifulSoup
 
 import page_analyzer.db as db
-from settings import SECRET_KEY
+from .settings import SECRET_KEY
+from .utils import normalize_url, check_page
 
 
 app = Flask(__name__)
+
 load_dotenv()
 app.config['SECRET_KEY'] = SECRET_KEY
 
@@ -29,7 +28,7 @@ def index():
 @app.post('/urls')
 def add_url():
     raw_url = request.form.get('url')
-    url = normalize(raw_url)
+    url = normalize_url(raw_url)
 
     if not validator(url):
         flash('Некорректный URL', 'danger')
@@ -73,33 +72,14 @@ def initialize_check(id):
     try:
         response = requests.get(url)
         response.raise_for_status()
-    except requests.exceptions.RequestException as e:
-        print(e)
+    except requests.exceptions.RequestException:
         flash('Произошла ошибка при проверке', 'danger')
         return redirect(url_for('show_url', id=id))
-    status_code = response.status_code
 
-    soup = BeautifulSoup(response.text, 'html.parser')
-    h1 = soup.find('h1').text if soup.find('h1') else ''
-    title = soup.title.text if soup.title else ''
-    description = soup.find(
-        'meta',
-        {'name': 'description'}
-    ).get('content') if soup.find(
-        'meta',
-        {'name': 'description'}
-    ) else ''
+    check_data = check_page(response)
     db.add_check(
         url_id=id,
-        status_code=status_code,
-        h1=h1,
-        title=title,
-        description=description
+        **check_data
     )
     flash('Страница успешно проверена', 'success')
     return redirect(url_for('show_url', id=id))
-
-
-def normalize(url):
-    o = urlparse(url)
-    return f'{o.scheme}://{o.netloc}'
