@@ -17,6 +17,8 @@ def check_page(response):
         "h1": soup.find('h1').text if soup.find('h1') else '',
         "title": soup.title.text if soup.title else '',
         "description": soup.find(
-            'meta', property="og:description"
-        )['content'] if soup.find('meta', property="og:description") else ''
+            'meta', attrs={'name': 'description'}
+        )['content'] if soup.find(
+            'meta', attrs={'name': 'description'}
+        ) else ''
     }
