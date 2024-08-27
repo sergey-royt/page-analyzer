@@ -1,7 +1,7 @@
 [tool.poetry]
 name = "hexlet-code"
 version = "0.1.0"
-description = ""
+description = "Flask web application that allows users to analyze web pages for SEO effectiveness."
 authors = ["Sergey R <topgoods687@gmail.com>"]
 readme = "README.md"
 packages = [{include = "page_analyzer"}]
