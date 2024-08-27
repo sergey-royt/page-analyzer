@@ -21,10 +21,10 @@ def is_url_in_db(url):
             WHERE name = %(url)s;""",
             {'url': url})
         id = cursor.fetchone()
-        if id:
-            return id[0]
-        else:
-            return False
+
+    if id:
+        return id[0]
+    return False
 
 
 def add_url(url):
@@ -38,7 +38,8 @@ def add_url(url):
                        {'name': url, 'created_at': created_at})
         url_id = cursor.fetchone()[0]
         conn.commit()
-        return url_id
+    return url_id
+    return url_id
 
 
 def find_url(id):

@@ -41,10 +41,9 @@ def add_url():
         flash('Страница уже существует', 'info')
         return redirect(url_for('show_url', id=id))
 
-    else:
-        url_id = db.add_url(url)
-        flash('Страница успешно добавлена', 'success')
-        return redirect(url_for('show_url', id=url_id))
+    url_id = db.add_url(url)
+    flash('Страница успешно добавлена', 'success')
+    return redirect(url_for('show_url', id=url_id))
 
 
 @app.route('/urls/<int:id>')
