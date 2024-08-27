@@ -141,7 +141,7 @@ def add_check(url_id: int,
         conn.commit()
 
 
-def get_url_from_db(id):
+def get_url_from_db(id: int) -> tuple:
     """Return row from urls table which contains given id"""
     select_query = """
         SELECT name, created_at

@@ -83,14 +83,14 @@ def initialize_check(id: int):
     ===============================================
     Add the check result to database
     """
-    url = db.find_url_info(id)['name']
+    url = Url(**db.find_url_info(id))
 
     try:
-        response = requests.get(url)
+        response = requests.get(url.name)
         response.raise_for_status()
     except requests.exceptions.RequestException:
         flash('Произошла ошибка при проверке', 'danger')
-        return redirect(url_for('show_url', id=id))
+        return redirect(url_for('show_url_info', id=id))
 
     status_code = response.status_code
 
