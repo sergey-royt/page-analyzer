@@ -11,12 +11,14 @@ from dotenv import load_dotenv
 from validators import url as validator
 from urllib.parse import urlparse
 from bs4 import BeautifulSoup
+
 import page_analyzer.db as db
+from settings import SECRET_KEY
 
 
 app = Flask(__name__)
 load_dotenv()
-app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
+app.config['SECRET_KEY'] = SECRET_KEY
 
 
 @app.route('/')

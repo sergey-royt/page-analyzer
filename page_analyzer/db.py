@@ -3,12 +3,14 @@ import psycopg2
 import os
 from datetime import date
 
+from settings import DATABASE_URL
+
+
 load_dotenv()
 
 
 def connect():
-    database = os.getenv('DATABASE_URL')
-    conn = psycopg2.connect(database)
+    conn = psycopg2.connect(DATABASE_URL)
     return conn
 
 
