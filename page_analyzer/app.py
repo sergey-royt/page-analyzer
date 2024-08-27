@@ -8,10 +8,11 @@ from flask import Flask, \
 import requests
 from dotenv import load_dotenv
 from validators import url as validator
+from werkzeug.wrappers import Response
 
 import page_analyzer.db as db
 from .settings import SECRET_KEY
-from .utils import normalize_url, check_page
+from .utils import normalize_url, get_accessibility_content
 
 
 app = Flask(__name__)
@@ -21,12 +22,14 @@ app.config['SECRET_KEY'] = SECRET_KEY
 
 
 @app.route('/')
-def index():
+def index() -> str:
+    """"""
     return render_template('index.html')
 
 
 @app.post('/urls')
 def add_url():
+    """"""
     raw_url = request.form.get('url')
     url = normalize_url(raw_url)
 
@@ -36,7 +39,7 @@ def add_url():
             'index.html',
             messages=get_flashed_messages(with_categories=True)), 422
 
-    id = db.is_url_in_db(url)
+    id = db.get_site_id(url)
     if id:
         flash('Страница уже существует', 'info')
         return redirect(url_for('show_url', id=id))
@@ -47,7 +50,8 @@ def add_url():
 
 
 @app.route('/urls/<int:id>')
-def show_url(id):
+def show_url(id: int) -> str:
+    """"""
     url = db.find_url(id)
     checks = db.show_checks(id)
     messages = get_flashed_messages(with_categories=True)
@@ -59,13 +63,15 @@ def show_url(id):
 
 
 @app.get('/urls')
-def show_urls():
+def show_urls() -> str:
+    """"""
     urls = db.list_urls()
     return render_template('list_urls.html', urls=urls)
 
 
 @app.post('/urls/<int:id>/checks')
-def initialize_check(id):
+def initialize_check(id: int) -> Response:
+    """"""
     url = db.find_url(id)['name']
 
     try:
@@ -75,10 +81,16 @@ def initialize_check(id):
         flash('Произошла ошибка при проверке', 'danger')
         return redirect(url_for('show_url', id=id))
 
-    check_data = check_page(response)
+    status_code = response.status_code
+
+    accessibility_data = get_accessibility_content(response)
+
     db.add_check(
         url_id=id,
-        **check_data
+        status_code=status_code,
+        **accessibility_data
     )
+
     flash('Страница успешно проверена', 'success')
+
     return redirect(url_for('show_url', id=id))

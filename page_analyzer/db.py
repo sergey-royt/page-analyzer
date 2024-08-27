@@ -9,25 +9,26 @@ load_dotenv()
 
 
 def connect():
+    """"""
     conn = psycopg2.connect(DATABASE_URL)
     return conn
 
 
-def is_url_in_db(url):
+def get_site_id(url):
     with connect().cursor() as cursor:
         cursor.execute(
             """SELECT id
             FROM urls
             WHERE name = %(url)s;""",
             {'url': url})
-        id = cursor.fetchone()
-
-    if id:
-        return id[0]
-    return False
+        try:
+            return cursor.fetchone()[0]
+        except TypeError:
+            return None
 
 
 def add_url(url):
+    """"""
     created_at = str(date.today())
     conn = connect()
     with conn.cursor() as cursor:
@@ -39,10 +40,10 @@ def add_url(url):
         url_id = cursor.fetchone()[0]
         conn.commit()
     return url_id
-    return url_id
 
 
 def find_url(id):
+    """"""
     with connect().cursor() as cursor:
         cursor.execute("""
         SELECT *
@@ -54,6 +55,7 @@ def find_url(id):
 
 
 def list_urls():
+    """"""
     with connect().cursor() as cursor:
         cursor.execute("""
         SELECT DISTINCT ON (urls.id)
@@ -79,6 +81,7 @@ def list_urls():
 
 
 def show_checks(id):
+    """"""
     with connect().cursor() as cursor:
         cursor.execute("""
         SELECT id,
@@ -108,6 +111,7 @@ def show_checks(id):
 
 
 def add_check(url_id, status_code=None, h1=None, title=None, description=None):
+    """"""
     created_at = str(date.today())
     conn = connect()
     with conn.cursor() as cursor:
