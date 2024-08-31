@@ -12,12 +12,12 @@
                         <th>Последняя проверка</th>
                         <th>Код ответа</th>
                     </tr>
-                    {% for url in urls %}
+                    {% for url, last_check in urls_data %}
                     <tr>
-                        <td>{{ url['id'] }}</td>
-                        <td><a href="/urls/{{ url['id'] }}">{{ url['name'] }}</a></td>
-                        <td>{{ url['last_check']|default('') }}</td>
-                        <td>{{ url['status_code']|default('') }}</td>
+                        <td>{{ url.id }}</td>
+                        <td><a href="/urls/{{ url['id'] }}">{{ url.name }}</a></td>
+                        <td>{% if last_check.created_at %}{{ last_check.created_at }}{% endif %}</td>
+                        <td>{% if last_check.status_code %}{{ last_check.status_code }}{% endif %}</td>
                     </tr>
                     {% endfor %}
                 </tbody>

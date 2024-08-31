@@ -21,6 +21,7 @@ def get_accessibility_content(response: Response) -> dict:
     soup = BeautifulSoup(response.text, 'html.parser')
 
     return {
+        "status_code": response.status_code,
         "h1": soup.find('h1').text if soup.find('h1') else '',
         "title": soup.title.text if soup.title else '',
         "description": soup.find(

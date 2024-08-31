@@ -1,13 +1,28 @@
 from types import NoneType
-
-from dotenv import load_dotenv
 import psycopg2
+from psycopg2 import pool
 from datetime import date
+from typing import Callable, Any
 
-from .settings import DATABASE_URL
+from page_analyzer.settings import DATABASE_URL
+from page_analyzer.models import Url, Check
 
 
-load_dotenv()
+TableRow = tuple[str, int, date]
+
+
+Pool = pool.SimpleConnectionPool(minconn=2, maxconn=3, dsn=DATABASE_URL)
+
+
+def make_db_connection(query_func: Callable) -> Any | None:
+    """Get connection from pull
+    give it to wrapped function return it to the pull after that"""
+    def wrapper(*args, **kwargs):
+        conn = Pool.getconn()
+        result = query_func(conn, *args, **kwargs)
+        Pool.putconn(conn)
+        return result
+    return wrapper
 
 
 def connect():
@@ -16,49 +31,89 @@ def connect():
     return conn
 
 
-def get_site_id(url: str) -> int | None:
+@make_db_connection
+def get_url_id(conn: Any, url_name: str) -> int | None:
     """
     Retrieve id of web-site from database
     if it had been already added.
     Else return None
+    :param conn: Database connection
+    :param url_name: normalized url string
     """
-    with connect().cursor() as cursor:
-        cursor.execute(
-            """SELECT id
-            FROM urls
-            WHERE name = %(url)s;""",
-            {'url': url})
+
+    query = """
+    SELECT id
+    FROM urls
+    WHERE name = %s;"""
+
+    with conn.cursor() as cursor:
+        cursor.execute(query,
+                       (url_name,))
         try:
-            return cursor.fetchone()[0]
+            url_id = cursor.fetchone()[0]
+            return url_id
         except TypeError:
             return None
 
 
-def add_url(url: str) -> int:
-    """Add url to database. Return id"""
-    created_at = date.today()
-    conn = connect()
+@make_db_connection
+def get_url_checks(conn: Any, url_id: int) -> list[TableRow, None]:
+    """
+
+    :param conn: Database connection
+    :param url_id: url_id int
+    :return: return list with all checks of url every check is a TableRow
+    in case there's no checks return empty list
+    """
+    query = """
+        SELECT id,
+        status_code,
+        COALESCE(h1, ''),
+        COALESCE(title, ''),
+        COALESCE(description, ''),
+        created_at
+        FROM url_checks
+        WHERE url_id = %s"""
+
     with conn.cursor() as cursor:
-        cursor.execute("""INSERT INTO urls
-        (name, created_at)
-        VALUES (%(name)s, %(created_at)s)
-        RETURNING id""",
-                       {'name': url, 'created_at': created_at})
-        url_id = cursor.fetchone()[0]
-        conn.commit()
-    return url_id
+        cursor.execute(query, (url_id,))
+        raw_checks = cursor.fetchall()
+
+    return raw_checks
 
 
-def find_url_info(id: int) -> dict:
-    """Return dict from urls table row which contains given id"""
-    name, created_at = get_url_from_db(id)
-    return {'id': id, 'name': name, 'created_at': created_at}
+@make_db_connection
+def get_url(conn: Any, url_id: int) -> TableRow | None:
+    """
+    By given id
+    Return url (name, created_at) row from db if exists
+    Return empty tuple if it doesn't exist
+    :param conn: Database connection
+    :param url_id: url id int
+    """
+    query = """
+            SELECT name, created_at
+            FROM urls
+            WHERE id = %s
+            """
+
+    with conn.cursor() as cursor:
+        cursor.execute(query,
+                       (url_id,))
+        url_row = cursor.fetchone()
+
+    return url_row
 
 
-def list_urls():
-    """Return dictionary contains distinct urls with last check information"""
-    with connect().cursor() as cursor:
-        cursor.execute("""
+@make_db_connection
+def get_all_urls(conn: Any) -> list[TableRow | NoneType]:
+    """
+    :param conn: Database connection
+    :return: list of all urls (TableRow) presented in database
+    with last checks result and date.
+    """
+
+    query = """
         SELECT DISTINCT ON (urls.id)
         urls.id,
         urls.name,
@@ -68,57 +123,37 @@ def list_urls():
         LEFT JOIN url_checks ON urls.id = url_checks.url_id
         GROUP BY urls.id, urls.name, url_checks.status_code
         ORDER BY urls.id
-        DESC""")
+        DESC"""
+
+    with conn.cursor() as cursor:
+        cursor.execute(query)
         raw_urls = cursor.fetchall()
-    urls = [
-        {
-            'id': id,
-            'name': name,
-            'last_check': last_check or '',
-            'status_code': status_code or ''
-        } for id, name, last_check, status_code in raw_urls
-    ]
-    return urls
+
+    return raw_urls
 
 
-def show_checks(id: int) -> dict:
-    """Return dictionary with all url's checks by given id"""
-    with connect().cursor() as cursor:
-        cursor.execute("""
-        SELECT id,
-        status_code,
-        COALESCE(h1, ''),
-        COALESCE(title, ''),
-        COALESCE(description, ''),
-        created_at
-        FROM url_checks
-        WHERE url_id = %(url_id)s""", {'url_id': id})
-        raw_checks = cursor.fetchall()
-    checks = [
-        {
-            'id': id,
-            'status_code': status_code,
-            'h1': h1,
-            'title': title,
-            'description': description,
-            'created_at': created_at
-        } for id,
-        status_code,
-        h1,
-        title,
-        description,
-        created_at in raw_checks]
-    return checks
+@make_db_connection
+def add_url(conn: Any, url: str) -> int:
+    """Add url to database. Return id"""
+
+    created_at = date.today()
+
+    with conn.cursor() as cursor:
+        cursor.execute("""INSERT INTO urls
+        (name, created_at)
+        VALUES (%s, %s)
+        RETURNING id""", (url, created_at))
+        url_id = cursor.fetchone()[0]
+        conn.commit()
+
+    return url_id
 
 
-def add_check(url_id: int,
-              status_code: NoneType | int = None,
-              h1: NoneType | str = None,
-              title: NoneType | str = None,
-              description: NoneType | str = None) -> None:
+@make_db_connection
+def add_check(conn: Any, check: Check) -> None:
     """Add check details to database"""
     created_at = date.today()
-    conn = connect()
+
     with conn.cursor() as cursor:
         cursor.execute("""
         INSERT INTO url_checks
@@ -130,25 +165,67 @@ def add_check(url_id: int,
         %(description)s,
         %(created_at)s)""",
                        {
-                           'url_id': url_id,
-                           'status_code': status_code,
-                           'h1': h1,
-                           'title': title,
-                           'description': description,
+                           'url_id': check.url_id,
+                           'status_code': check.status_code,
+                           'h1': check.h1,
+                           'title': check.title,
+                           'description': check.description,
                            'created_at': created_at
                        }
                        )
         conn.commit()
 
 
-def get_url_from_db(id: int) -> tuple:
-    """Return row from urls table which contains given id"""
-    select_query = """
-        SELECT name, created_at
-        FROM urls
-        WHERE id = %s
-        """
-    with connect().cursor() as cursor:
-        cursor.execute(select_query, (id,))
-        row = cursor.fetchone()
-    return row
+def find_url(url_id: int) -> Url | None:
+    """
+    :param url_id: int url id
+    :return: Url object by id
+    """
+    try:
+        name, created_at = get_url(url_id=url_id)
+        return Url(id=url_id, name=name, created_at=created_at)
+    except TypeError:
+        return None
+
+
+def find_checks(url_id: int) -> list[Check | None]:
+    """
+    :param url_id: int url id
+    :return: list with Checks of url or with None if there isn't any
+    """
+    raw_checks = get_url_checks(url_id=url_id)
+
+    checks = [
+        Check(
+            id=id,
+            status_code=status_code,
+            h1=h1,
+            title=title,
+            description=description,
+            created_at=created_at
+        ) for id,
+        status_code,
+        h1,
+        title,
+        description,
+        created_at in raw_checks]
+
+    return checks
+
+
+def find_all_urls_with_last_check() -> list[tuple[Url | Check]]:
+    """
+    :return: list of tuples with Url and its last Check
+    if there isn't last check for url
+    Check object will have fields containing None
+    """
+    raw_urls = get_all_urls()
+
+    listed_urls = [
+        (Url(
+            id=id, name=name
+        ), Check(
+            created_at=last_check, status_code=status_code
+        )) for id, name, last_check, status_code in raw_urls]
+
+    return listed_urls
