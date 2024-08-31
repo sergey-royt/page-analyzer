@@ -4,6 +4,7 @@ from datetime import date
 
 @dataclass
 class Check:
+    """Dataclass representing check"""
     url_id: int | None = None
     status_code: int | None = None
     h1: str | None = None
@@ -15,6 +16,7 @@ class Check:
 
 @dataclass
 class Url:
+    """Dataclass representing url"""
     name: str
     id: int
     created_at: date | None = None

@@ -16,6 +16,7 @@ from .settings import SECRET_KEY
 from .utils import normalize_url, get_accessibility_content
 from .models import Check
 
+
 load_dotenv()
 
 

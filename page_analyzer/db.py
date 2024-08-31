@@ -1,5 +1,3 @@
-from types import NoneType
-import psycopg2
 from psycopg2 import pool
 from datetime import date
 from typing import Callable, Any
@@ -8,7 +6,7 @@ from page_analyzer.settings import DATABASE_URL
 from page_analyzer.models import Url, Check
 
 
-TableRow = tuple[str, int, date]
+TableRow = tuple[str, int, date, None]
 
 
 Pool = pool.SimpleConnectionPool(minconn=2, maxconn=3, dsn=DATABASE_URL)
@@ -23,12 +21,6 @@ def make_db_connection(query_func: Callable) -> Any | None:
         Pool.putconn(conn)
         return result
     return wrapper
-
-
-def connect():
-    """Return database connection"""
-    conn = psycopg2.connect(DATABASE_URL)
-    return conn
 
 
 @make_db_connection
@@ -57,7 +49,7 @@ def get_url_id(conn: Any, url_name: str) -> int | None:
 
 
 @make_db_connection
-def get_url_checks(conn: Any, url_id: int) -> list[TableRow, None]:
+def get_url_checks(conn: Any, url_id: int) -> list[TableRow]:
     """
 
     :param conn: Database connection
@@ -83,7 +75,7 @@ def get_url_checks(conn: Any, url_id: int) -> list[TableRow, None]:
 
 
 @make_db_connection
-def get_url(conn: Any, url_id: int) -> TableRow | None:
+def get_url(conn: Any, url_id: int) -> TableRow:
     """
     By given id
     Return url (name, created_at) row from db if exists
@@ -106,7 +98,7 @@ def get_url(conn: Any, url_id: int) -> TableRow | None:
 
 
 @make_db_connection
-def get_all_urls(conn: Any) -> list[TableRow | NoneType]:
+def get_all_urls(conn: Any) -> list[TableRow]:
     """
     :param conn: Database connection
     :return: list of all urls (TableRow) presented in database
@@ -213,7 +205,7 @@ def find_checks(url_id: int) -> list[Check | None]:
     return checks
 
 
-def find_all_urls_with_last_check() -> list[tuple[Url | Check]]:
+def find_all_urls_with_last_check() -> list[tuple[Url, Check]]:
     """
     :return: list of tuples with Url and its last Check
     if there isn't last check for url
