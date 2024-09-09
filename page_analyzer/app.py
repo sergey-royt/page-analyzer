@@ -7,7 +7,6 @@ from flask import Flask, \
     redirect
 import requests
 from requests import Response
-from dotenv import load_dotenv
 from validators import url as validator
 from http import HTTPStatus
 
@@ -15,9 +14,6 @@ import page_analyzer.db as db
 from .settings import SECRET_KEY
 from .utils import normalize_url, get_accessibility_content
 from .models import Check
-
-
-load_dotenv()
 
 
 app = Flask(__name__)

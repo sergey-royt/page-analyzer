@@ -2,12 +2,14 @@ from psycopg2 import pool
 from datetime import date
 from typing import Callable, Any
 
-from page_analyzer.settings import DATABASE_URL
+from page_analyzer.settings import DATABASE_URL, MINCONN, MAXCONN
 from page_analyzer.models import Url, Check
 from page_analyzer.models import TableRow
 
 
-Pool = pool.SimpleConnectionPool(minconn=2, maxconn=3, dsn=DATABASE_URL)
+Pool = pool.SimpleConnectionPool(
+    minconn=MINCONN, maxconn=MAXCONN, dsn=DATABASE_URL
+)
 
 
 def make_db_connection(query_func: Callable) -> Any | None:
@@ -25,7 +27,7 @@ def make_db_connection(query_func: Callable) -> Any | None:
 
 
 @make_db_connection
-def get_url_id(*, conn: Any, url_name: str) -> TableRow:
+def get_url_id(*, conn: Any, url_name: str) -> tuple[int | None]:
     """
     Retrieve id of web-site from database
     if it had been already added.
@@ -48,7 +50,7 @@ def get_url_id(*, conn: Any, url_name: str) -> TableRow:
 
 
 @make_db_connection
-def get_url_checks(*, conn: Any, url_id: int) -> list[TableRow]:
+def get_url_checks(*, conn: Any, url_id: int) -> list[tuple]:
     """
 
     :param conn: Database connection
@@ -74,7 +76,7 @@ def get_url_checks(*, conn: Any, url_id: int) -> list[TableRow]:
 
 
 @make_db_connection
-def get_url(*, conn: Any, url_id: int) -> TableRow:
+def get_url(*, conn: Any, url_id: int) -> tuple[int, str, date]:
     """
     By given id
     Return url (name, created_at) row from db if exists
