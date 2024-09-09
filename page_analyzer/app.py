@@ -48,12 +48,12 @@ def add_url() -> str | tuple[str, int] | Response:
             messages=get_flashed_messages(with_categories=True)), \
             HTTPStatus.UNPROCESSABLE_ENTITY
 
-    url_id = db.get_url_id(url)
+    url_id = db.get_url_id(url_name=url)
     if url_id:
         flash('Страница уже существует', 'info')
         return redirect(url_for('show_url_info', id=url_id))
 
-    url_id = db.add_url(url)
+    url_id = db.add_url(url=url)
     flash('Страница успешно добавлена', 'success')
     return redirect(url_for('show_url_info', id=url_id))
 

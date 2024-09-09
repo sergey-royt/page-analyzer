@@ -18,14 +18,14 @@ def make_db_connection(query_func: Callable) -> Any | None:
         """Accepts only keyword args"""
         if not conn:
             conn = Pool.getconn()
-        result = query_func(conn, **kwargs)
+        result = query_func(conn=conn, **kwargs)
         Pool.putconn(conn)
         return result
     return wrapper
 
 
 @make_db_connection
-def get_url_id(conn: Any, url_name: str) -> int | None:
+def get_url_id(*, conn: Any, url_name: str) -> int | None:
     """
     Retrieve id of web-site from database
     if it had been already added.
@@ -50,7 +50,7 @@ def get_url_id(conn: Any, url_name: str) -> int | None:
 
 
 @make_db_connection
-def get_url_checks(conn: Any, url_id: int) -> list[TableRow]:
+def get_url_checks(*, conn: Any, url_id: int) -> list[TableRow]:
     """
 
     :param conn: Database connection
@@ -76,7 +76,7 @@ def get_url_checks(conn: Any, url_id: int) -> list[TableRow]:
 
 
 @make_db_connection
-def get_url(conn: Any, url_id: int) -> TableRow:
+def get_url(*, conn: Any, url_id: int) -> TableRow:
     """
     By given id
     Return url (name, created_at) row from db if exists
@@ -99,7 +99,7 @@ def get_url(conn: Any, url_id: int) -> TableRow:
 
 
 @make_db_connection
-def get_all_urls(conn: Any) -> list[TableRow]:
+def get_all_urls(*, conn: Any) -> list[TableRow]:
     """
     :param conn: Database connection
     :return: list of all urls (TableRow) presented in database
@@ -126,7 +126,7 @@ def get_all_urls(conn: Any) -> list[TableRow]:
 
 
 @make_db_connection
-def add_url(conn: Any, url: str) -> int:
+def add_url(*, conn: Any, url: str) -> int:
     """Add url to database. Return id"""
 
     created_at = date.today()
@@ -143,7 +143,7 @@ def add_url(conn: Any, url: str) -> int:
 
 
 @make_db_connection
-def add_check(conn: Any, check: Check) -> None:
+def add_check(*, conn: Any, check: Check) -> None:
     """Add check details to database"""
     created_at = date.today()
 
