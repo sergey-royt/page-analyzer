@@ -102,7 +102,7 @@ def initialize_check(id: int) -> Response:
 
     check = Check(url_id=id, **accessibility_data)
 
-    db.add_check(check)
+    db.add_check(check=check)
 
     flash('Страница успешно проверена', 'success')
 

@@ -11,11 +11,14 @@ Pool = pool.SimpleConnectionPool(minconn=2, maxconn=3, dsn=DATABASE_URL)
 
 
 def make_db_connection(query_func: Callable) -> Any | None:
-    """Get connection from pull
-    give it to wrapped function return it to the pull after that"""
-    def wrapper(*args, **kwargs):
-        conn = Pool.getconn()
-        result = query_func(conn, *args, **kwargs)
+    """Get connection from pull if it's not passed explicitly and
+    give it to wrapped function.
+    Return it to the pull after that."""
+    def wrapper(*, conn=None, **kwargs):
+        """Accepts only keyword args"""
+        if not conn:
+            conn = Pool.getconn()
+        result = query_func(conn, **kwargs)
         Pool.putconn(conn)
         return result
     return wrapper
