@@ -25,7 +25,7 @@ def make_db_connection(query_func: Callable) -> Any | None:
 
 
 @make_db_connection
-def get_url_id(*, conn: Any, url_name: str) -> int | None:
+def get_url_id(*, conn: Any, url_name: str) -> TableRow:
     """
     Retrieve id of web-site from database
     if it had been already added.
@@ -42,11 +42,9 @@ def get_url_id(*, conn: Any, url_name: str) -> int | None:
     with conn.cursor() as cursor:
         cursor.execute(query,
                        (url_name,))
-        try:
-            url_id = cursor.fetchone()[0]
-            return url_id
-        except TypeError:
-            return None
+        url_id_row = cursor.fetchone()
+
+    return url_id_row
 
 
 @make_db_connection
@@ -222,3 +220,9 @@ def find_all_urls_with_last_check() -> list[tuple[Url, Check]]:
         )) for id, name, last_check, status_code in raw_urls]
 
     return listed_urls
+
+
+def find_url_id(url_name):
+    url_id_row = get_url_id(url_name=url_name)
+    if url_id_row:
+        return url_id_row[0]
