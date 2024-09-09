@@ -19,6 +19,8 @@ ___
 3. Create .env file in repository directory and set up variables 
 - `SECRET_KEY` (for Flask sessions)
 - `DATABASE_URL` ({provider}://{user}:{password}@{host}:{port}/{db})
+- You can specify min and max count of database connections by adding `MINCONN={int}` and `MAXCONN={int}`
+by default minconn=2, maxconn=3
 4. Run `make build`
 5. Run `make dev` for debugging (with WSGI debug set to 'True'), or `make start` for production (using gunicorn)
 

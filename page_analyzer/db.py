@@ -4,9 +4,7 @@ from typing import Callable, Any
 
 from page_analyzer.settings import DATABASE_URL
 from page_analyzer.models import Url, Check
-
-
-TableRow = tuple[str, int, date, None]
+from page_analyzer.models import TableRow
 
 
 Pool = pool.SimpleConnectionPool(minconn=2, maxconn=3, dsn=DATABASE_URL)
