@@ -29,7 +29,7 @@ def index() -> str:
 @app.post('/urls')
 def add_url() -> str | tuple[str, int] | Response:
     """
-    Validate url from recieved form
+    Validate url from received form
     Add it to database in case it has not been added yet.
     Add flash messages to response
     """
