@@ -1,6 +1,5 @@
 from dataclasses import dataclass
 from datetime import date
-from typing import Any
 
 
 @dataclass
@@ -21,9 +20,3 @@ class Url:
     name: str
     id: int
     created_at: date | None = None
-
-
-@dataclass
-class TableRow:
-    """dataclass representing db table row"""
-    values: tuple[Any]

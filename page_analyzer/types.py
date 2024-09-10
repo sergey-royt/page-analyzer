@@ -1,34 +1,38 @@
+from dataclasses import dataclass
 from datetime import date
-from typing import NewType
 
 
-Id = NewType('Id', int)
-StatusCode = NewType('StatusCode', int)
-H1 = NewType('H1', str)
-Title = NewType('Title', str)
-Description = NewType('Description', str)
-CreationDate = NewType('CreationDate', date)
-LastCheck = NewType('LastCheck', date)
-UrlName = NewType('UrlName', str)
+@dataclass
+class Table:
+    """Dataclass representing table cells types"""
+    id: type = int
+    status_code: type = int
+    h1: type = str
+    title: type = str
+    description: type = str
+    creation_date: type = date
+    last_check: type = date
+    url_name: type = str
+
 
 CheckTableRow = tuple[
-    Id,
-    StatusCode,
-    H1 | None,
-    Title | None,
-    Description | None,
-    CreationDate
+    Table.id,
+    Table.status_code,
+    Table.h1 | None,
+    Table.title | None,
+    Table.description | None,
+    Table.creation_date
 ]
 
 UrlTableRow = tuple[
-    Id,
-    UrlName,
-    CreationDate
+    Table.id,
+    Table.url_name,
+    Table.creation_date
 ]
 
 UrlLastCheckTableRow = tuple[
-    Id,
-    UrlName,
-    LastCheck | None,
-    StatusCode
+    Table.id,
+    Table.url_name,
+    Table.last_check | None,
+    Table.status_code
 ]

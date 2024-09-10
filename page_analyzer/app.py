@@ -49,7 +49,7 @@ def add_url() -> str | tuple[str, int] | Response:
         flash('Страница уже существует', 'info')
         return redirect(url_for('show_url_info', id=url_id))
 
-    url_id = db.add_url(url=url)
+    url_id = db.add_url(url_name=url)
     flash('Страница успешно добавлена', 'success')
     return redirect(url_for('show_url_info', id=url_id))
 
