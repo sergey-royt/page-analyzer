@@ -1,38 +1,35 @@
-from dataclasses import dataclass
+"""Custom types to annotate data from database"""
+
 from datetime import date
 
 
-@dataclass
-class Table:
-    """Dataclass representing table cells types"""
-    id: type = int
-    status_code: type = int
-    h1: type = str
-    title: type = str
-    description: type = str
-    creation_date: type = date
-    last_check: type = date
-    url_name: type = str
-
+Id = int
+StatusCode = int
+H1 = str
+Title = str
+Description = str
+CreationDate = date
+LastCheck = date
+UrlName = str
 
 CheckTableRow = tuple[
-    Table.id,
-    Table.status_code,
-    Table.h1 | None,
-    Table.title | None,
-    Table.description | None,
-    Table.creation_date
+    Id,
+    StatusCode,
+    H1 | None,
+    Title | None,
+    Description | None,
+    CreationDate
 ]
 
 UrlTableRow = tuple[
-    Table.id,
-    Table.url_name,
-    Table.creation_date
+    Id,
+    UrlName,
+    CreationDate
 ]
 
 UrlLastCheckTableRow = tuple[
-    Table.id,
-    Table.url_name,
-    Table.last_check | None,
-    Table.status_code
+    Id,
+    UrlName,
+    LastCheck | None,
+    StatusCode
 ]
