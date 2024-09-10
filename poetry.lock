@@ -97,7 +97,7 @@ files = [
 name = "cfgv"
 version = "3.4.0"
 description = "Validate configuration and produce human readable error messages."
-category = "main"
+category = "dev"
 optional = false
 python-versions = ">=3.8"
 files = [
@@ -236,7 +236,7 @@ files = [
 name = "distlib"
 version = "0.3.8"
 description = "Distribution utilities"
-category = "main"
+category = "dev"
 optional = false
 python-versions = "*"
 files = [
@@ -248,7 +248,7 @@ files = [
 name = "filelock"
 version = "3.16.0"
 description = "A platform independent file lock."
-category = "main"
+category = "dev"
 optional = false
 python-versions = ">=3.8"
 files = [
@@ -326,7 +326,7 @@ tornado = ["tornado (>=0.2)"]
 name = "identify"
 version = "2.6.0"
 description = "File identification library for Python"
-category = "main"
+category = "dev"
 optional = false
 python-versions = ">=3.8"
 files = [
@@ -477,7 +477,7 @@ files = [
 name = "nodeenv"
 version = "1.9.1"
 description = "Node.js virtual environment builder"
-category = "main"
+category = "dev"
 optional = false
 python-versions = "!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*,!=3.4.*,!=3.5.*,!=3.6.*,>=2.7"
 files = [
@@ -513,7 +513,7 @@ files = [
 name = "platformdirs"
 version = "4.3.2"
 description = "A small Python package for determining appropriate platform-specific dirs, e.g. a `user data dir`."
-category = "main"
+category = "dev"
 optional = false
 python-versions = ">=3.8"
 files = [
@@ -530,7 +530,7 @@ type = ["mypy (>=1.11.2)"]
 name = "pre-commit"
 version = "3.8.0"
 description = "A framework for managing and maintaining multi-language pre-commit hooks."
-category = "main"
+category = "dev"
 optional = false
 python-versions = ">=3.9"
 files = [
@@ -670,7 +670,7 @@ cli = ["click (>=5.0)"]
 name = "pyyaml"
 version = "6.0.2"
 description = "YAML parser and emitter for Python"
-category = "main"
+category = "dev"
 optional = false
 python-versions = ">=3.8"
 files = [
@@ -853,7 +853,7 @@ tooling-extras = ["pyaml (>=23.7.0)", "pypandoc-binary (>=1.11)", "pytest (>=7.4
 name = "virtualenv"
 version = "20.26.4"
 description = "Virtual Python Environment builder"
-category = "main"
+category = "dev"
 optional = false
 python-versions = ">=3.7"
 files = [
@@ -891,4 +891,4 @@ watchdog = ["watchdog (>=2.3)"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.10"
-content-hash = "98314ab43650589321412afdd4fff700bf1f69b9b81fb10a4cf36f9a180cba8b"
+content-hash = "258c4aa37102768be9682a408a545e0f241d1409f715ab89259b1ec565a69b48"
