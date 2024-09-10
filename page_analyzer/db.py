@@ -4,7 +4,8 @@ from typing import Callable, Any
 
 from page_analyzer.settings import DATABASE_URL, MINCONN, MAXCONN
 from page_analyzer.models import Url, Check
-from page_analyzer.models import TableRow
+from page_analyzer.types import Id, UrlName, UrlTableRow, \
+    CheckTableRow, UrlLastCheckTableRow
 
 
 Pool = pool.SimpleConnectionPool(
@@ -27,7 +28,7 @@ def make_db_connection(query_func: Callable) -> Any | None:
 
 
 @make_db_connection
-def get_url_id(*, conn: Any, url_name: str) -> tuple[int | None]:
+def get_url_id(*, conn: Any, url_name: UrlName) -> tuple[Id | None]:
     """
     Retrieve id of web-site from database
     if it had been already added.
@@ -50,7 +51,7 @@ def get_url_id(*, conn: Any, url_name: str) -> tuple[int | None]:
 
 
 @make_db_connection
-def get_url_checks(*, conn: Any, url_id: int) -> list[tuple]:
+def get_url_checks(*, conn: Any, url_id: Id) -> list[CheckTableRow]:
     """
 
     :param conn: Database connection
@@ -76,7 +77,7 @@ def get_url_checks(*, conn: Any, url_id: int) -> list[tuple]:
 
 
 @make_db_connection
-def get_url(*, conn: Any, url_id: int) -> tuple[int, str, date]:
+def get_url(*, conn: Any, url_id: Id) -> tuple[UrlTableRow | None]:
     """
     By given id
     Return url (name, created_at) row from db if exists
@@ -85,7 +86,7 @@ def get_url(*, conn: Any, url_id: int) -> tuple[int, str, date]:
     :param url_id: url id int
     """
     query = """
-            SELECT name, created_at
+            SELECT *
             FROM urls
             WHERE id = %s
             """
@@ -99,11 +100,11 @@ def get_url(*, conn: Any, url_id: int) -> tuple[int, str, date]:
 
 
 @make_db_connection
-def get_all_urls(*, conn: Any) -> list[TableRow]:
+def get_all_urls(*, conn: Any) -> list[UrlLastCheckTableRow | None]:
     """
     :param conn: Database connection
-    :return: list of all urls (TableRow) presented in database
-    with last checks result and date.
+    :return: list of all urls (TableRow) in database
+    with last checks result and date if presented.
     """
 
     query = """
@@ -126,16 +127,18 @@ def get_all_urls(*, conn: Any) -> list[TableRow]:
 
 
 @make_db_connection
-def add_url(*, conn: Any, url: str) -> int:
+def add_url(*, conn: Any, url_name: UrlName) -> Id:
     """Add url to database. Return id"""
 
     created_at = date.today()
 
-    with conn.cursor() as cursor:
-        cursor.execute("""INSERT INTO urls
+    query = """INSERT INTO urls
         (name, created_at)
         VALUES (%s, %s)
-        RETURNING id""", (url, created_at))
+        RETURNING id"""
+
+    with conn.cursor() as cursor:
+        cursor.execute(query, (url_name, created_at))
         url_id = cursor.fetchone()[0]
         conn.commit()
 
@@ -147,8 +150,7 @@ def add_check(*, conn: Any, check: Check) -> None:
     """Add check details to database"""
     created_at = date.today()
 
-    with conn.cursor() as cursor:
-        cursor.execute("""
+    query = """
         INSERT INTO url_checks
         (url_id, status_code, h1, title, description, created_at)
         VALUES (%(url_id)s,
@@ -156,7 +158,10 @@ def add_check(*, conn: Any, check: Check) -> None:
         %(h1)s,
         %(title)s,
         %(description)s,
-        %(created_at)s)""",
+        %(created_at)s)"""
+
+    with conn.cursor() as cursor:
+        cursor.execute(query,
                        {
                            'url_id': check.url_id,
                            'status_code': check.status_code,
@@ -169,19 +174,19 @@ def add_check(*, conn: Any, check: Check) -> None:
         conn.commit()
 
 
-def find_url(url_id: int) -> Url | None:
+def find_url(url_id: Id) -> Url | None:
     """
     :param url_id: int url id
     :return: Url object by id
     """
     try:
-        name, created_at = get_url(url_id=url_id)
+        url_id, name, created_at = get_url(url_id=url_id)
         return Url(id=url_id, name=name, created_at=created_at)
     except TypeError:
         return None
 
 
-def find_checks(url_id: int) -> list[Check | None]:
+def find_checks(url_id: Id) -> list[Check | None]:
     """
     :param url_id: int url id
     :return: list with Checks of url or with None if there isn't any
@@ -224,7 +229,8 @@ def find_all_urls_with_last_check() -> list[tuple[Url, Check]]:
     return listed_urls
 
 
-def find_url_id(url_name):
+def find_url_id(url_name: UrlName) -> Id:
+    """Retrieve url id by given url name"""
     url_id_row = get_url_id(url_name=url_name)
     if url_id_row:
         return url_id_row[0]
