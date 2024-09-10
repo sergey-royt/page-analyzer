@@ -13,23 +13,9 @@ LastCheck = date
 UrlName = str
 
 CheckTableRow = tuple[
-    Id,
-    StatusCode,
-    H1 | None,
-    Title | None,
-    Description | None,
-    CreationDate
+    Id, StatusCode, H1 | None, Title | None, Description | None, CreationDate
 ]
 
-UrlTableRow = tuple[
-    Id,
-    UrlName,
-    CreationDate
-]
+UrlTableRow = tuple[Id, UrlName, CreationDate]
 
-UrlLastCheckTableRow = tuple[
-    Id,
-    UrlName,
-    LastCheck | None,
-    StatusCode
-]
+UrlLastCheckTableRow = tuple[Id, UrlName, LastCheck | None, StatusCode]

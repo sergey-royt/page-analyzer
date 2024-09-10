@@ -7,13 +7,16 @@ from typing import Callable, Any
 
 from page_analyzer.settings import DATABASE_URL, MINCONN, MAXCONN
 from page_analyzer.models import Url, Check
-from page_analyzer.types import Id, UrlName, UrlTableRow, \
-    CheckTableRow, UrlLastCheckTableRow
-
-
-Pool = pool.SimpleConnectionPool(
-    minconn=MINCONN, maxconn=MAXCONN, dsn=DATABASE_URL
+from page_analyzer.types import (
+    Id,
+    UrlName,
+    UrlTableRow,
+    CheckTableRow,
+    UrlLastCheckTableRow,
 )
+
+
+Pool = pool.SimpleConnectionPool(minconn=MINCONN, maxconn=MAXCONN, dsn=DATABASE_URL)
 
 
 def make_db_connection(query_func: Callable) -> Any | None:
@@ -33,13 +36,12 @@ def make_db_connection(query_func: Callable) -> Any | None:
             conn.rollback()
         finally:
             Pool.putconn(conn)
+
     return wrapper
 
 
 @make_db_connection
-def get_url_id(
-        *, conn: Any, url_name: UrlName
-) -> tuple[Id | None]:
+def get_url_id(*, conn: Any, url_name: UrlName) -> tuple[Id | None]:
     """
     Retrieve id of web-site from database
     if it had been already added.
@@ -54,8 +56,7 @@ def get_url_id(
     WHERE name = %s;"""
 
     with conn.cursor() as cursor:
-        cursor.execute(query,
-                       (url_name,))
+        cursor.execute(query, (url_name,))
         url_id_row = cursor.fetchone()
 
     return url_id_row
@@ -102,8 +103,7 @@ def get_url(*, conn: Any, url_id: Id) -> UrlTableRow | tuple[None]:
             """
 
     with conn.cursor() as cursor:
-        cursor.execute(query,
-                       (url_id,))
+        cursor.execute(query, (url_id,))
         url_row = cursor.fetchone()
 
     return url_row
@@ -171,16 +171,17 @@ def add_check(*, conn: Any, check: Check) -> None:
         %(created_at)s)"""
 
     with conn.cursor() as cursor:
-        cursor.execute(query,
-                       {
-                           'url_id': check.url_id,
-                           'status_code': check.status_code,
-                           'h1': check.h1,
-                           'title': check.title,
-                           'description': check.description,
-                           'created_at': created_at
-                       }
-                       )
+        cursor.execute(
+            query,
+            {
+                "url_id": check.url_id,
+                "status_code": check.status_code,
+                "h1": check.h1,
+                "title": check.title,
+                "description": check.description,
+                "created_at": created_at,
+            },
+        )
 
 
 def find_url(url_id: Id) -> Url | None:
@@ -211,13 +212,10 @@ def find_checks(url_id: Id) -> list[Check | None]:
             h1=h1,
             title=title,
             description=description,
-            created_at=created_at
-        ) for id,
-        status_code,
-        h1,
-        title,
-        description,
-        created_at in raw_checks]
+            created_at=created_at,
+        )
+        for id, status_code, h1, title, description, created_at in raw_checks
+    ]
 
     return checks
 
@@ -231,11 +229,9 @@ def find_all_urls_with_last_check() -> list[tuple[Url, Check]]:
     raw_urls = get_all_urls()
 
     listed_urls = [
-        (Url(
-            id=id, name=name
-        ), Check(
-            created_at=last_check, status_code=status_code
-        )) for id, name, last_check, status_code in raw_urls]
+        (Url(id=id, name=name), Check(created_at=last_check, status_code=status_code))
+        for id, name, last_check, status_code in raw_urls
+    ]
 
     return listed_urls
 
