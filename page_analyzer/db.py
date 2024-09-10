@@ -16,8 +16,10 @@ Pool = pool.SimpleConnectionPool(
 
 def make_db_connection(query_func: Callable) -> Any | None:
     """Get connection from pull if it's not passed explicitly and
-    give it to wrapped function.
-    Return it to the pull after that."""
+    give it to wrapped query function.
+    Make commit amd return connection to the pull after that.
+    Make rollback if DatabaseError caused by query function raised."""
+
     def wrapper(*, conn=None, **kwargs):
         if not conn:
             conn = Pool.getconn()
