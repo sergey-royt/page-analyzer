@@ -16,7 +16,9 @@ from page_analyzer.types import (
 )
 
 
-Pool = pool.SimpleConnectionPool(minconn=MINCONN, maxconn=MAXCONN, dsn=DATABASE_URL)
+Pool = pool.SimpleConnectionPool(
+    minconn=MINCONN, maxconn=MAXCONN, dsn=DATABASE_URL
+)
 
 
 def make_db_connection(query_func: Callable) -> Any | None:
@@ -229,7 +231,7 @@ def find_all_urls_with_last_check() -> list[tuple[Url, Check]]:
     raw_urls = get_all_urls()
 
     listed_urls = [
-        (Url(id=id, name=name), Check(created_at=last_check, status_code=status_code))
+        (Url(id, name), Check(created_at=last_check, status_code=status_code))
         for id, name, last_check, status_code in raw_urls
     ]
 

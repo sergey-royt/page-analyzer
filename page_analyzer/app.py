@@ -44,10 +44,9 @@ def add_url() -> str | tuple[str, int] | Response:
 
     if not validator(url):
         flash("Некорректный URL", "danger")
+        messages = get_flashed_messages(with_categories=True)
         return (
-            render_template(
-                "index.html", messages=get_flashed_messages(with_categories=True)
-            ),
+            render_template("index.html", messages=messages),
             HTTPStatus.UNPROCESSABLE_ENTITY,
         )
 
