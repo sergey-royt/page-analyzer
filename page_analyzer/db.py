@@ -1,3 +1,5 @@
+"""Functions for database access and handling database data"""
+
 import psycopg2
 from psycopg2 import pool
 from datetime import date
@@ -41,9 +43,9 @@ def get_url_id(
     """
     Retrieve id of web-site from database
     if it had been already added.
-    Else return None
     :param conn: Database connection
     :param url_name: normalized url string
+    :return: tuple containing retrieved id or empty if nothing was found.
     """
 
     query = """
@@ -60,12 +62,11 @@ def get_url_id(
 
 
 @make_db_connection
-def get_url_checks(*, conn: Any, url_id: Id) -> list[CheckTableRow]:
+def get_url_checks(*, conn: Any, url_id: Id) -> list[CheckTableRow | None]:
     """
-
     :param conn: Database connection
     :param url_id: url_id int
-    :return: return list with all checks of url every check is a TableRow
+    :return: return list with all checks of url every check is a CheckTableRow
     in case there's no checks return empty list
     """
     query = """
@@ -86,10 +87,10 @@ def get_url_checks(*, conn: Any, url_id: Id) -> list[CheckTableRow]:
 
 
 @make_db_connection
-def get_url(*, conn: Any, url_id: Id) -> UrlTableRow | None:
+def get_url(*, conn: Any, url_id: Id) -> UrlTableRow | tuple[None]:
     """
     By given id
-    Return url (id, name, created_at) row from db if exists
+    Return UrlTableRow (id, name, created_at) row from db if exists
     Return empty tuple if it doesn't exist
     :param conn: Database connection
     :param url_id: url id int
@@ -112,8 +113,9 @@ def get_url(*, conn: Any, url_id: Id) -> UrlTableRow | None:
 def get_all_urls(*, conn: Any) -> list[UrlLastCheckTableRow | None]:
     """
     :param conn: Database connection
-    :return: list of all urls (TableRow) in database
-    with last checks result and date if presented.
+    :return: list of all urls from database
+    with last checks result and date if presented (UrlLastCheclTableRows)
+    or empty list if there is no urls in database.
     """
 
     query = """
@@ -137,7 +139,7 @@ def get_all_urls(*, conn: Any) -> list[UrlLastCheckTableRow | None]:
 
 @make_db_connection
 def add_url(*, conn: Any, url_name: UrlName) -> Id:
-    """Add url to database. Return id"""
+    """Add url to database. Return Id"""
 
     created_at = date.today()
 
@@ -183,8 +185,9 @@ def add_check(*, conn: Any, check: Check) -> None:
 
 def find_url(url_id: Id) -> Url | None:
     """
-    :param url_id: int url id
-    :return: Url object by id
+    Find url by given id if presented
+    :param url_id: int
+    :return: Url object or None if id doesn't exist.
     """
     try:
         url_id, name, created_at = get_url(url_id=url_id)
@@ -195,6 +198,7 @@ def find_url(url_id: Id) -> Url | None:
 
 def find_checks(url_id: Id) -> list[Check | None]:
     """
+    Find all checks of url by given id.
     :param url_id: int url id
     :return: list with Checks of url or with None if there isn't any
     """

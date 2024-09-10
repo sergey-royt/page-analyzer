@@ -1,3 +1,5 @@
+"""Web application views"""
+
 from flask import Flask, \
     render_template, \
     request, \
@@ -29,9 +31,10 @@ def index() -> str:
 @app.post('/urls')
 def add_url() -> str | tuple[str, int] | Response:
     """
-    Validate url from received form
-    Add it to database in case it has not been added yet.
-    Add flash messages to response
+    Validate url from received form. If url is convenient
+    Add it to database in case it has not been added yet
+    and redirect to url list page.
+    Otherwise, render main page with massage 'Incorrect Url'
     """
 
     raw_url = request.form.get('url')
@@ -56,7 +59,7 @@ def add_url() -> str | tuple[str, int] | Response:
 
 @app.route('/urls/<int:id>')
 def show_url_info(id: int) -> str | tuple[str, int]:
-    """Show url info: id, name, creation date, checks"""
+    """Render page with url info: id, name, creation date, checks"""
     url = db.find_url(id)
     if url:
         checks = db.find_checks(id)
