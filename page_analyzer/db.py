@@ -1,3 +1,4 @@
+import psycopg2
 from psycopg2 import pool
 from datetime import date
 from typing import Callable, Any
@@ -18,12 +19,16 @@ def make_db_connection(query_func: Callable) -> Any | None:
     give it to wrapped function.
     Return it to the pull after that."""
     def wrapper(*, conn=None, **kwargs):
-        """Accepts only keyword args"""
         if not conn:
             conn = Pool.getconn()
-        result = query_func(conn=conn, **kwargs)
-        Pool.putconn(conn)
-        return result
+        try:
+            result = query_func(conn=conn, **kwargs)
+            conn.commit()
+            return result
+        except psycopg2.DatabaseError:
+            conn.rollback()
+        finally:
+            Pool.putconn(conn)
     return wrapper
 
 
@@ -79,10 +84,10 @@ def get_url_checks(*, conn: Any, url_id: Id) -> list[CheckTableRow]:
 
 
 @make_db_connection
-def get_url(*, conn: Any, url_id: Id) -> tuple[UrlTableRow | None]:
+def get_url(*, conn: Any, url_id: Id) -> UrlTableRow | None:
     """
     By given id
-    Return url (name, created_at) row from db if exists
+    Return url (id, name, created_at) row from db if exists
     Return empty tuple if it doesn't exist
     :param conn: Database connection
     :param url_id: url id int
@@ -142,7 +147,6 @@ def add_url(*, conn: Any, url_name: UrlName) -> Id:
     with conn.cursor() as cursor:
         cursor.execute(query, (url_name, created_at))
         url_id = cursor.fetchone()[0]
-        conn.commit()
 
     return url_id
 
@@ -173,7 +177,6 @@ def add_check(*, conn: Any, check: Check) -> None:
                            'created_at': created_at
                        }
                        )
-        conn.commit()
 
 
 def find_url(url_id: Id) -> Url | None:
