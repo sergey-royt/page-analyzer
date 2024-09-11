@@ -50,7 +50,7 @@ def add_url() -> str | tuple[str, int] | Response:
             HTTPStatus.UNPROCESSABLE_ENTITY,
         )
 
-    url_id = db.find_url_id(url_name=url)
+    url_id = db.get_url_id(url_name=url)
     if url_id:
         flash("Страница уже существует", "info")
         return redirect(url_for("show_url_info", id=url_id))
@@ -63,9 +63,9 @@ def add_url() -> str | tuple[str, int] | Response:
 @app.route("/urls/<int:id>")
 def show_url_info(id: int) -> str | tuple[str, int]:
     """Render page with url info: id, name, creation date, checks"""
-    url = db.find_url(id)
+    url = db.get_url(id)
     if url:
-        checks = db.find_checks(id)
+        checks = db.get_url_checks(id)
         messages = get_flashed_messages(with_categories=True)
         return render_template(
             "show_url.html", url=url, checks=checks, messages=messages
@@ -76,7 +76,7 @@ def show_url_info(id: int) -> str | tuple[str, int]:
 @app.get("/urls")
 def show_urls() -> str:
     """Render page with list of urls with last check"""
-    urls_data = db.find_all_urls_with_last_check()
+    urls_data = db.get_all_urls_with_last_check()
     return render_template("list_urls.html", urls_data=urls_data)
 
 
@@ -89,7 +89,7 @@ def initialize_check(id: int) -> Response:
     ===============================================
     Add the check result to database
     """
-    url = db.find_url(id)
+    url = db.get_url(id)
 
     try:
         response = requests.get(url.name)

@@ -7,13 +7,6 @@ from typing import Callable, Any
 
 from page_analyzer.settings import DATABASE_URL, MINCONN, MAXCONN
 from page_analyzer.models import Url, Check
-from page_analyzer.types import (
-    Id,
-    UrlName,
-    UrlTableRow,
-    CheckTableRow,
-    UrlLastCheckTableRow,
-)
 
 
 Pool = pool.SimpleConnectionPool(
@@ -43,13 +36,13 @@ def make_db_connection(query_func: Callable) -> Any | None:
 
 
 @make_db_connection
-def get_url_id(*, conn: Any, url_name: UrlName) -> tuple[Id | None]:
+def get_url_id(*, conn: Any, url_name: str) -> int | None:
     """
     Retrieve id of web-site from database
     if it had been already added.
     :param conn: Database connection
     :param url_name: normalized url string
-    :return: tuple containing retrieved id or empty if nothing was found.
+    :return: retrieved id or None if nothing was found.
     """
 
     query = """
@@ -61,15 +54,16 @@ def get_url_id(*, conn: Any, url_name: UrlName) -> tuple[Id | None]:
         cursor.execute(query, (url_name,))
         url_id_row = cursor.fetchone()
 
-    return url_id_row
+    if url_id_row:
+        return url_id_row[0]
 
 
 @make_db_connection
-def get_url_checks(*, conn: Any, url_id: Id) -> list[CheckTableRow | None]:
+def get_url_checks(*, conn: Any, url_id: int) -> list[Check | None]:
     """
     :param conn: Database connection
     :param url_id: url_id int
-    :return: return list with all checks of url every check is a CheckTableRow
+    :return: list with all checks as Check objects
     in case there's no checks return empty list
     """
     query = """
@@ -86,15 +80,24 @@ def get_url_checks(*, conn: Any, url_id: Id) -> list[CheckTableRow | None]:
         cursor.execute(query, (url_id,))
         raw_checks = cursor.fetchall()
 
-    return raw_checks
+    return [
+        Check(
+            id=id,
+            status_code=status_code,
+            h1=h1,
+            title=title,
+            description=description,
+            created_at=created_at,
+        )
+        for id, status_code, h1, title, description, created_at in raw_checks
+    ]
 
 
 @make_db_connection
-def get_url(*, conn: Any, url_id: Id) -> UrlTableRow | tuple[None]:
+def get_url(*, conn: Any, url_id: int) -> Url | None:
     """
     By given id
-    Return UrlTableRow (id, name, created_at) row from db if exists
-    Return empty tuple if it doesn't exist
+    Return url as Url object if exists
     :param conn: Database connection
     :param url_id: url id int
     """
@@ -108,15 +111,20 @@ def get_url(*, conn: Any, url_id: Id) -> UrlTableRow | tuple[None]:
         cursor.execute(query, (url_id,))
         url_row = cursor.fetchone()
 
-    return url_row
+    if url_row:
+        url_id, name, created_at = url_row
+        return Url(id=url_id, name=name, created_at=created_at)
 
 
 @make_db_connection
-def get_all_urls(*, conn: Any) -> list[UrlLastCheckTableRow | None]:
+def get_all_urls_with_last_check(
+        *, conn: Any
+) -> list[tuple[Url, Check] | None]:
     """
     :param conn: Database connection
     :return: list of all urls from database
-    with last checks result and date if presented (UrlLastCheclTableRows)
+    with last checks result and date if presented
+    as tuple containing Url and Check object
     or empty list if there is no urls in database.
     """
 
@@ -136,11 +144,14 @@ def get_all_urls(*, conn: Any) -> list[UrlLastCheckTableRow | None]:
         cursor.execute(query)
         raw_urls = cursor.fetchall()
 
-    return raw_urls
+    return [
+        (Url(id, name), Check(created_at=last_check, status_code=status_code))
+        for id, name, last_check, status_code in raw_urls
+    ]
 
 
 @make_db_connection
-def add_url(*, conn: Any, url_name: UrlName) -> Id:
+def add_url(*, conn: Any, url_name: str) -> int:
     """Add url to database. Return Id"""
 
     created_at = date.today()
@@ -184,62 +195,3 @@ def add_check(*, conn: Any, check: Check) -> None:
                 "created_at": created_at,
             },
         )
-
-
-def find_url(url_id: Id) -> Url | None:
-    """
-    Find url by given id if presented
-    :param url_id: int
-    :return: Url object or None if id doesn't exist.
-    """
-    try:
-        url_id, name, created_at = get_url(url_id=url_id)
-        return Url(id=url_id, name=name, created_at=created_at)
-    except TypeError:
-        return None
-
-
-def find_checks(url_id: Id) -> list[Check | None]:
-    """
-    Find all checks of url by given id.
-    :param url_id: int url id
-    :return: list with Checks of url or with None if there isn't any
-    """
-    raw_checks = get_url_checks(url_id=url_id)
-
-    checks = [
-        Check(
-            id=id,
-            status_code=status_code,
-            h1=h1,
-            title=title,
-            description=description,
-            created_at=created_at,
-        )
-        for id, status_code, h1, title, description, created_at in raw_checks
-    ]
-
-    return checks
-
-
-def find_all_urls_with_last_check() -> list[tuple[Url, Check]]:
-    """
-    :return: list of tuples with Url and its last Check
-    if there isn't last check for url
-    Check object will have fields containing None
-    """
-    raw_urls = get_all_urls()
-
-    listed_urls = [
-        (Url(id, name), Check(created_at=last_check, status_code=status_code))
-        for id, name, last_check, status_code in raw_urls
-    ]
-
-    return listed_urls
-
-
-def find_url_id(url_name: UrlName) -> Id:
-    """Retrieve url id by given url name"""
-    url_id_row = get_url_id(url_name=url_name)
-    if url_id_row:
-        return url_id_row[0]

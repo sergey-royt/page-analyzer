@@ -2,10 +2,8 @@ from urllib.parse import urlparse
 from requests import Response
 from bs4 import BeautifulSoup
 
-from page_analyzer.types import UrlName
 
-
-def normalize_url(url: str) -> UrlName:
+def normalize_url(url: str) -> str:
     """
     Format the link to the following scheme:
     {scheme}://{netloc}
