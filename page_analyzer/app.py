@@ -63,9 +63,9 @@ def add_url() -> str | tuple[str, int] | Response:
 @app.route("/urls/<int:id>")
 def show_url_info(id: int) -> str | tuple[str, int]:
     """Render page with url info: id, name, creation date, checks"""
-    url = db.get_url(id)
+    url = db.get_url(url_id=id)
     if url:
-        checks = db.get_url_checks(id)
+        checks = db.get_url_checks(url_id=id)
         messages = get_flashed_messages(with_categories=True)
         return render_template(
             "show_url.html", url=url, checks=checks, messages=messages
@@ -89,7 +89,7 @@ def initialize_check(id: int) -> Response:
     ===============================================
     Add the check result to database
     """
-    url = db.get_url(id)
+    url = db.get_url(url_id=id)
 
     try:
         response = requests.get(url.name)

@@ -118,7 +118,7 @@ def get_url(*, conn: Any, url_id: int) -> Url | None:
 
 @make_db_connection
 def get_all_urls_with_last_check(
-        *, conn: Any
+    *, conn: Any
 ) -> list[tuple[Url, Check] | None]:
     """
     :param conn: Database connection
@@ -145,7 +145,10 @@ def get_all_urls_with_last_check(
         raw_urls = cursor.fetchall()
 
     return [
-        (Url(id, name), Check(created_at=last_check, status_code=status_code))
+        (
+            Url(id=id, name=name),
+            Check(created_at=last_check, status_code=status_code),
+        )
         for id, name, last_check, status_code in raw_urls
     ]
 
