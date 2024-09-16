@@ -11,6 +11,9 @@ which provides simple features to check websites SEO-accessibility.
 On this app, you can add sites to the main page by entering a URL, 
 perform "SEO checks" to receive basic information about it. 
 Users can add as many websites and checks as they want.
+
+### Demo
+You can try the app in [web](https://page-analyzer-vqqh.onrender.com/).
 ___
 
 **Installation**:
