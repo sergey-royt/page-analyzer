@@ -26,5 +26,3 @@ ___
 by default minconn=2, maxconn=3
 4. Run `make build`
 5. Run `make dev` for debugging (with WSGI debug set to 'True'), or `make start` for production (using gunicorn)
-
-[Try in web](https://page-analyzer-vqqh.onrender.com)
